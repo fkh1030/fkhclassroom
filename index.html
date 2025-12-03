@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#10b981">
+    <title>馮sir教室</title>
+    
+    <!-- App Icon -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='background-color:%2310b981;'%3E%3Cpath d='M22 10v6M2 10l10-5 10 5-10 5z'/%3E%3Cpath d='M6 12v5c3 3 9 3 12 0v-5'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 10v6M2 10l10-5 10 5-10 5z'/%3E%3Cpath d='M6 12v5c3 3 9 3 12 0v-5'/%3E%3C/svg%3E">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        body { 
+            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; 
+            /* Removed overflow-hidden to allow natural scrolling */
+            -webkit-tap-highlight-color: transparent;
+        }
+        @keyframes fade-in-up {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up { animation: fade-in-up 0.4s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+    <div id="root" class="min-h-screen"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- Icons ---
+        const Icon = ({ path, size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                {path}
+            </svg>
+        );
+
+        const Icons = {
+            Users: (p) => <Icon {...p} path={<><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} />,
+            Shuffle: (p) => <Icon {...p} path={<><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l14.2-14.4"/><path d="M22 18h-1.4c-1.3 0-2.5-.6-3.3-1.7L3.1 1.9"/><path d="m16 2 6 6"/><path d="m2 22 6-6"/><path d="m16 22 6-6"/><path d="m2 2 6 6"/></>} />,
+            Clock: (p) => <Icon {...p} path={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} />,
+            Award: (p) => <Icon {...p} path={<><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></>} />,
+            Settings: (p) => <Icon {...p} path={<><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></>} />,
+            Trash2: (p) => <Icon {...p} path={<><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></>} />,
+            Save: (p) => <Icon {...p} path={<><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></>} />,
+            RefreshCw: (p) => <Icon {...p} path={<><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></>} />,
+            Leaf: (p) => <Icon {...p} path={<><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></>} />,
+            GraduationCap: (p) => <Icon {...p} path={<><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></>} />,
+            Play: (p) => <Icon {...p} path={<><polygon points="5 3 19 12 5 21 5 3"/></>} />,
+            Pause: (p) => <Icon {...p} path={<><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></>} />,
+            RotateCcw: (p) => <Icon {...p} path={<><path d="M3 2v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/></>} />,
+            Plus: (p) => <Icon {...p} path={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />,
+            Minus: (p) => <Icon {...p} path={<><line x1="5" y1="12" x2="19" y2="12"/></>} />,
+            Columns: (p) => <Icon {...p} path={<><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="3" x2="12" y2="21"/></>} />,
+            Rows: (p) => <Icon {...p} path={<><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="12" x2="21" y2="12"/></>} />,
+            Upload: (p) => <Icon {...p} path={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></>} />,
+            Image: (p) => <Icon {...p} path={<><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></>} />,
+            ChevronLeft: (p) => <Icon {...p} path={<><polyline points="15 18 9 12 15 6"/></>} />,
+            Home: (p) => <Icon {...p} path={<><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>} />,
+        };
+
+        const STUDENT_DB = {
+         "1A01": "陳詩悅", "1A02": "周子恩", "1A03": "黃紫柵", "1A04": "吳仟紅", "1A05": "簡思瑪", "1A06": "賴鈺晶", "1A07": "林碧月", "1A08": "劉凱晴", "1A09": "李樂晴", "1A10": "莫凱淇", "1A11": "潘芷瑶", "1A12": "馬希汶", "1A13": "溫詩雅", "1A14": "溫詩妮", "1A15": "謝少虹", "1A16": "趙敏熙", "1A17": "畢帆", "1A18": "蔡子進", "1A19": "黃子恒", "1A20": "郭炫志", "1A21": "林俊安", "1A22": "李澤睿", "1A23": "梁柏城", "1A24": "馬翎耀", "1A25": "吳卓鋒", "1A26": "柯盛源", "1A27": "鄧嘉興", "1A28": "董釗良", "1A29": "謝承佑", "1A30": "葉梓翔", "1A31": "葉忻喬", "1A32": "鄭杰朗", "1A33": "莊霖均", "1M01": "陳芍綾", "1M02": "陳塏營", "1M03": "陳凱蕊", "1M04": "陳彥婷", "1M05": "周芷樂", "1M06": "張梓千", "1M07": "何芯萓", "1M08": "黃雲希", "1M09": "姚佩茵", "1M10": "簡曉汶", "1M11": "李麗琪", "1M12": "李藝玟", "1M13": "盧曉琳", "1M14": "茅馨羽", "1M15": "陳樂融", "1M16": "黃晞妍", "1M17": "黃琬晴", "1M18": "庾吉佳", "1M19": "陳俊升", "1M20": "陳銘煒", "1M21": "趙優", "1M22": "鍾志培", "1M23": "賴柏翹", "1M24": "黎子希", "1M25": "梁思瀚", "1M26": "梁浩權", "1M27": "麥晉熙", "1M28": "莫平康", "1M29": "彭沛賢", "1M30": "蕭柏軒", "1M31": "宋奕翰", "1M32": "蔡卓坤", "1R01": "陳希瑤", "1R02": "陳錦恩", "1R03": "陳君雨", "1R04": "陳嘉欣", "1R05": "程詩琪", "1R06": "莊哲真", "1R07": "方嘉儀", "1R08": "孔玉珊", "1R09": "梁名欣", "1R10": "盧思澄", "1R11": "吳芷澄", "1R12": "湯詠琳", "1R13": "楊煦蓁", "1R14": "姚諾晴", "1R15": "張鑫桐", "1R16": "張梓沂", "1R17": "蔡佛豪", "1R18": "陳宝荣", "1R19": "張振浩", "1R20": "黃俊傑", "1R21": "彭柏林", "1R22": "岑子朗", "1R23": "邵銘軒", "1R24": "唐敬嶢", "1R25": "王昊峰", "1R26": "黃柏睿", "1R27": "黃鋮峰", "1R28": "楊竣熙", "1R29": "楊承浠", "1R30": "邱泰賢", "1R31": "葉皓朗", "1R32": "余杰坤", "1R33": "張日熹", "1Y01": "陳焯悠", "1Y02": "陳汶怡", "1Y03": "郭可莹", "1Y04": "何嘉嵐", "1Y05": "黃徐樂潼", "1Y06": "簡晞媛", "1Y07": "梁鄶鐿", "1Y08": "林嘉熙", "1Y09": "林芷彥", "1Y10": "石恩曦", "1Y11": "施沁怡", "1Y12": "譚曉晴", "1Y13": "邱懿", "1Y14": "叶芷烯", "1Y15": "姚潁恩", "1Y16": "蔡嘉軒", "1Y17": "程梓鋒", "1Y18": "朱進璋", "1Y19": "方肇謙", "1Y20": "符寅", "1Y21": "何振濤", "1Y22": "黃錦洪", "1Y23": "劉易至", "1Y24": "李夏陽", "1Y25": "李嘉豪", "1Y26": "廖本正", "1Y27": "唐海韜", "1Y28": "翁冠熙", "1Y29": "温文樂", "1Y30": "許浩軒", "1Y31": "余奕謙", "1Y32": "葉子揚", "1Y33": "余梓尹", "1Y34": "袁梓翔", "2A01": "蔡馨桐", "2A02": "陳曉楠", "2A03": "陳俞彤", "2A04": "馮皓琳", "2A05": "許紫妍", "2A06": "黎子菲", "2A07": "羅鈺瀅", "2A08": "李雅琪", "2A09": "梁君珩", "2A10": "李靖敏", "2A11": "楊紫涵", "2A12": "叶詩琳", "2A13": "邢凱晴", "2A14": "葉雅澄", "2A15": "余晞彤", "2A16": "余梓寧", "2A17": "鄭安娜", "2A18": "朱胤青", "2A19": "歐澤希", "2A20": "鄭天騏", "2A21": "丁宇", "2A22": "郭子文", "2A23": "叶文軒", "2A24": "古嘉熙", "2A25": "李柏希", "2A26": "盧柏誠", "2A27": "吳錦培", "2A28": "吳天朗", "2A29": "譚穎杰", "2A30": "黃梓維", "2A31": "余玨駿", "2A32": "翁信霖", "2M01": "蔡博玲", "2M02": "鄒泳彤", "2M03": "鄭嘉欣", "2M04": "洪希妍", "2M05": "林保希", "2M06": "劉倩利", "2M07": "劉芷欣", "2M08": "陸梓潼", "2M09": "倫凱晴", "2M10": "吳惠恩", "2M11": "孫樂", "2M12": "翁嘉盈", "2M13": "黃曉曈", "2M14": "黃樂瑤", "2M15": "袁嘉雯", "2M16": "張詩穎", "2M17": "陳俊霖", "2M18": "陳栢新", "2M19": "蔡一俊", "2M20": "鄒君霖", "2M21": "周朗圻", "2M22": "何嘉俊", "2M23": "何迅熙", "2M24": "黃昭島", "2M25": "雷翔皓", "2M26": "李鎮熙", "2M27": "李健游", "2M28": "廖峻鋒", "2M29": "譚沛源", "2M30": "王俊傑", "2M31": "余健鋒", "2M32": "余健林", "2M33": "鍾沛宇", "2R01": "陳倩悠", "2R02": "陳恩蓓", "2R03": "周子嵐", "2R04": "鄭子琳", "2R05": "蔡曉彤", "2R06": "何婧柔", "2R07": "黎文鏵", "2R08": "林嘉如", "2R09": "劉樂瞳", "2R10": "林靜琪", "2R11": "林紫慧", "2R12": "陸曦樂", "2R13": "吳宛潼", "2R14": "潘樂萱", "2R15": "譚舒尹", "2R16": "趙展儀", "2R17": "鄭穎謙", "2R18": "張梓朗", "2R19": "張梓倫", "2R20": "劉博軒", "2R21": "劉峻宇", "2R22": "梁俊熙", "2R23": "梁文燊", "2R24": "梁瑧雄", "2R25": "潘世謙", "2R26": "盤展鳴", "2R27": "蘇恆", "2R28": "孫焌稀", "2R29": "曾浩博", "2R30": "曾錦添", "2R31": "徐梓軒", "2R32": "任永康", "2R33": "周庭毅", "2Y01": "蔡欣妤", "2Y02": "陳希彤", "2Y03": "趙芷澄", "2Y04": "蔡樂瑤", "2Y05": "鍾樂婷", "2Y06": "符思欣", "2Y07": "何靜瑜", "2Y08": "賴玥曈", "2Y09": "劉鎧晴", "2Y10": "雷德盈", "2Y11": "李嘉綺", "2Y12": "李德睎", "2Y13": "冼梓莹", "2Y14": "蕭蔚思", "2Y15": "曾靖媛", "2Y16": "曾穎", "2Y17": "魏玉麒", "2Y18": "黃姵瑤", "2Y19": "楊心悦", "2Y20": "楊梓楠", "2Y21": "杜皓天", "2Y22": "葉梓峰", "2Y23": "高可峰", "2Y24": "關淨", "2Y25": "林子亨", "2Y26": "劉沛熹", "2Y27": "李嘉銘", "2Y28": "李子軒", "2Y29": "劉奕彤", "2Y30": "范俊康", "2Y31": "屈國鴻", "2Y32": "甄樂浠", "2Y33": "楊佳籃", "2Y34": "余晉銘", "3A01": "區秀怡", "3A02": "陳穎茵", "3A03": "蔡依霖", "3A04": "莊靜", "3A05": "馮秋悅", "3A06": "洪嘉咏", "3A07": "曾麗華", "3A08": "羅愛諆", "3A09": "李美希", "3A10": "李尹嵐", "3A11": "梁爔文", "3A12": "呂海琪", "3A13": "吳若霖", "3A14": "譚梓晴", "3A15": "曾銘薈", "3A16": "黃曉晴", "3A17": "黃品霏", "3A18": "謝曉漩", "3A19": "楊嘉穎", "3A20": "曾雯", "3A21": "張芷烯", "3A22": "張咏詩", "3A23": "陳柏熹", "3A24": "曹家瑋", "3A25": "何俊民", "3A26": "李柏霖", "3A27": "李酷天", "3A28": "龐朝佳", "3A29": "唐梓軒", "3A30": "黃祖謙", "3A31": "黃柏濠", "3A32": "黃丞浩", "3A33": "嚴浩軒", "3M01": "趙心悅", "3M02": "蔡康琦", "3M03": "朱翠影", "3M04": "梁鈞婷", "3M05": "廖芷祺", "3M06": "蕭希彤", "3M07": "王苡蓁", "3M08": "易家珈", "3M09": "陳俊成", "3M10": "陳毅朗", "3M11": "陳恩浩", "3M12": "鄭皓浚", "3M13": "朱銘澤", "3M14": "褚柏軒", "3M15": "方梓昊", "3M16": "鄺千里", "3M17": "林宇軒", "3M18": "劉軒樂", "3M19": "李卓謙", "3M20": "梁庭彰", "3M21": "李展燊", "3M22": "馬梓晞", "3M23": "吳曉峰", "3M24": "吳榮恩", "3M25": "顏呈祥", "3M26": "王俊熙", "3M27": "王梓赫", "3M28": "葉奕良", "3M29": "尹柏朗", "3M30": "游智宇", "3M31": "余浩軒", "3M32": "容樂言", "3R01": "陳麒馨", "3R02": "陳熱敏", "3R03": "鄭詩雅", "3R04": "張文熙", "3R05": "林家寶", "3R06": "李泳霖", "3R07": "李泳頤", "3R08": "梁美心", "3R09": "潘栩柔", "3R10": "楊孝穎", "3R11": "徐敏怡", "3R12": "吳惠津", "3R13": "吳茵宜", "3R14": "謝子雲", "3R15": "陳天齊", "3R16": "周燁磊", "3R17": "陳俊宇", "3R18": "周柏熹", "3R19": "馮翊原", "3R20": "何業雋", "3R21": "韓晉穎", "3R22": "黃頌軒", "3R23": "方家熙", "3R24": "龔梓軒", "3R25": "梁峻瑋", "3R26": "盧楚峰", "3R27": "老俊謙", "3R28": "馬祺煜", "3R29": "倪譽豪", "3R30": "潘酷", "3R31": "鄧梓熙", "3R32": "黃嘉樑", "3Y01": "蔡瑩瑩", "3Y02": "陳瑞欣", "3Y03": "鍾俙璇", "3Y04": "鍾子娸", "3Y05": "梁芷琳", "3Y06": "李心玄", "3Y07": "劉甘思敏", "3Y08": "唐泳琳", "3Y09": "謝婉蓉", "3Y10": "王慧鈺", "3Y11": "張曉欣", "3Y12": "歐陽家恒", "3Y13": "陳志洋", "3Y14": "陳鵬智", "3Y15": "蔡晉希", "3Y16": "鍾善行", "3Y17": "何增錦", "3Y18": "黃冠汶", "3Y19": "黎展誠", "3Y20": "林振軒", "3Y21": "林晨宇", "3Y22": "李梓軒", "3Y23": "李鴻衍", "3Y24": "梁俊軒", "3Y25": "顏之濠", "3Y26": "蕭澤森", "3Y27": "孫嘉耀", "3Y28": "鄧國豐", "3Y29": "鄧朗言", "3Y30": "王嘉銘", "3Y31": "楊凱傑", "3Y32": "葉佳億", "4A01": "區琬幸", "4A02": "陳子瑤", "4A03": "陳欣柔", "4A04": "陳宜莛", "4A05": "張韻欣", "4A06": "杜子銣", "4A07": "方嬌蕾", "4A08": "何嘉淇", "4A09": "何安娜", "4A10": "何靜瑄", "4A11": "黃宇欣", "4A12": "黎嘉騏", "4A13": "梁茵怡", "4A14": "林潔雅", "4A15": "吳思桐", "4A16": "倪嘉怡", "4A17": "黃晞蓓", "4A18": "許靜雯", "4A19": "楊永熙", "4A20": "余思澄", "4A21": "陳信謙", "4A22": "鄭立晞", "4A23": "張文浩", "4A24": "何楠强", "4A25": "劉承熙", "4A26": "廖謙樂", "4A27": "馬子晉", "4A28": "吳宇軒", "4A29": "譚竣鍵", "4A30": "黃俊誠", "4A31": "黃健維", "4A32": "尹顥朗", "4M01": "詩言", "4M02": "卓希桐", "4M03": "方嬌蘭", "4M04": "林浠程", "4M05": "李卓曈", "4M06": "李米嘉", "4M07": "梁美賢", "4M08": "林紫依", "4M09": "羅學深", "4M10": "文心攸", "4M11": "伍晞彤", "4M12": "伍嘉雯", "4M13": "藍詩亞", "4M14": "李婉晴", "4M15": "蘇可琳", "4M16": "譚雅妍", "4M17": "徐鶴澄", "4M18": "黃凱晴", "4M19": "黃家慧", "4M20": "黃天兒", "4M21": "楊紫晴", "4M22": "陳政浩", "4M23": "馮靖燃", "4M24": "劉凱昇", "4M25": "李卓謙", "4M26": "李建鋒", "4M27": "梁家豪", "4M28": "劉子源", "4M29": "穆宏穎", "4M30": "曾柏皓", "4M31": "黃樂軒", "4M32": "楊俊軒", "4R01": "陳欣諺", "4R02": "何思其", "4R03": "林梓琪", "4R04": "李嘉英", "4R05": "梁鋇淇", "4R06": "羅秋霞", "4R07": "蘇烺僑", "4R08": "胡梓晴", "4R09": "余素賢", "4R10": "陳峻宇", "4R11": "趙靖宇", "4R12": "蔡志軒", "4R13": "徐志健", "4R14": "馮恩賜", "4R15": "高靖然", "4R16": "洪楷燁", "4R17": "黃樂軒", "4R18": "洪尚鈞", "4R19": "柯啟濤", "4R20": "姜卓楠", "4R21": "黎栢希", "4R22": "李樂文", "4R23": "羅梓軒", "4R24": "伍國耀", "4R25": "彭浩榮", "4R26": "冼城君", "4R27": "王卓維", "4R28": "黃稚翔", "4R29": "楊竣博", "4R30": "余煒軒", "4R31": "朱嘉明", "4Y01": "區浩恩", "4Y02": "陳梓寧", "4Y03": "陳晓茹", "4Y04": "鄭斐瀠", "4Y05": "鄧文樂", "4Y06": "羅貝詩", "4Y07": "李泳彤", "4Y08": "林梓怡", "4Y09": "田靜榆", "4Y10": "易珈瑤", "4Y11": "趙雨嘉", "4Y12": "白博涵", "4Y13": "陳俊瑜", "4Y14": "周煒楷", "4Y15": "馮午沅", "4Y16": "賀梓軒", "4Y17": "何迪笙", "4Y18": "黎飛旭", "4Y19": "黎宇軒", "4Y20": "林劍聰", "4Y21": "羅傲軒", "4Y22": "梁名俊", "4Y23": "李浩安", "4Y24": "梁頌祺", "4Y25": "司徒志銘", "4Y26": "蕭澤銘", "4Y27": "蘇永權", "4Y28": "蘇梓洛", "4Y29": "司徒曉東", "4Y30": "譚嘉堯", "4Y31": "周松鋒", "5A01": "杜曉靜", "5A02": "夏恩禮", "5A03": "黎寶婷", "5A04": "李文洁", "5A05": "李海恩", "5A06": "馬凱泳", "5A07": "麥沛琦", "5A08": "吳宛霖", "5A09": "邵泳欣", "5A10": "蘇紫瑩", "5A11": "鄧卓瑩", "5A12": "湯曉晴", "5A13": "王佩佩", "5A14": "黃天雪", "5A15": "楊靖瑤", "5A16": "楊芷妍", "5A17": "鍾穎潼", "5A18": "陳家樂", "5A19": "陳柏豪", "5A20": "霍煒達", "5A21": "黃澤峰", "5A22": "許銘達", "5A23": "林鋑堯", "5A24": "劉凱迅", "5A25": "劉嘉熙", "5A26": "倪尚文", "5A27": "阮正軒", "5A28": "譚裕俊", "5A29": "王澤斌", "5A30": "黃文滔", "5A31": "葉子業", "5A32": "余華哲", "5M01": "歐陽妙沂", "5M02": "蔡曉炘", "5M03": "李秀雯", "5M04": "李紫嵐", "5M05": "盧泳祈", "5M06": "伍羡楹", "5M07": "譚欣虹", "5M08": "唐子詠", "5M09": "黃學心", "5M10": "胡樂心", "5M11": "謝曉晴", "5M12": "楊心雨", "5M13": "葉泳棋", "5M14": "張芷清", "5M15": "張梓淇", "5M16": "陳汪銘", "5M17": "陳日昇", "5M18": "鄒梓樂", "5M19": "方浩霖", "5M20": "何佰恩", "5M21": "何卓劻", "5M22": "李宗偉", "5M23": "李汶城", "5M24": "李文博", "5M25": "盧銘言", "5M26": "吳家強", "5M27": "吳明璟", "5M28": "楊諾熹", "5M29": "鄧崇謙", "5M30": "湯峻皓", "5M31": "徐梓洛", "5M32": "王澤楠", "5M33": "余俊生", "5R01": "歐芷棋", "5R02": "曹曼澄", "5R03": "周旨悅", "5R04": "鄧嘉欣", "5R05": "叶如寶", "5R06": "關穎禧", "5R07": "林樂澄", "5R08": "劉曉韻", "5R09": "蘇言雅", "5R10": "唐海盈", "5R11": "吳曉銅", "5R12": "鄭浩莹", "5R13": "周施延", "5R14": "鄭耀東", "5R15": "莊晉彥", "5R16": "鍾家寶", "5R17": "甄志軒", "5R18": "勞俊華", "5R19": "梁俊皓", "5R20": "梁尚謙", "5R21": "梁城", "5R22": "李權", "5R23": "盧梓浩", "5R24": "莫峻豪", "5R25": "施梓宸", "5R26": "譚仲熙", "5R27": "譚梓熙", "5R28": "譚梓傑", "5R29": "黃泓晉", "5R30": "余宇力", "5Y01": "陳欣婷", "5Y02": "朱愷晴", "5Y03": "叶如珠", "5Y04": "劉思瑜", "5Y05": "梁卓瑩", "5Y06": "麥穎兒", "5Y07": "馬郗蓮", "5Y08": "孫雅婷", "5Y09": "王萌萌", "5Y10": "葉美慧", "5Y11": "楊靖昕", "5Y12": "楊鍇俐", "5Y13": "陳凱諾", "5Y14": "徐肇欽", "5Y15": "馮國希", "5Y16": "梁柏釗", "5Y17": "李澤明", "5Y18": "廖康丞", "5Y19": "盧展鏗", "5Y20": "羅東旭", "5Y21": "孫宇謙", "5Y22": "謝俊傑", "5Y23": "謝逸嵐", "5Y24": "黃焯謙", "5Y25": "黃智健", "5Y26": "王浩綸", "5Y27": "謝政炫", "5Y28": "張鑫宇", "5Y29": "鄭渡豐", "6A01": "畢嘉諾", "6A02": "翟浠童", "6A03": "陳凱恩", "6A04": "陳嘉懿", "6A05": "陳栢迦", "6A06": "張凱婷", "6A07": "林日嘉", "6A08": "李芷蕙", "6A09": "廖美琪", "6A10": "劉嘉琪", "6A11": "莫泳思", "6A12": "吳心瀅", "6A13": "譚泳妍", "6A14": "黃寶婷", "6A15": "姚伊琪", "6A16": "陳柄霖", "6A17": "陳文迪", "6A18": "陳銘謙", "6A19": "甘進熙", "6A20": "賴朗熙", "6A21": "劉嘉德", "6A22": "李浚鏗", "6A23": "彭文浩", "6A24": "温贊謙", "6A25": "黃澤泰", "6A26": "黃栢琛", "6A27": "楊誠鋒", "6A28": "嚴宇健", "6M01": "區穎儀", "6M02": "陳綺兒", "6M03": "霍心悅", "6M04": "李樂兒", "6M05": "凌嘉歡", "6M06": "盧言恩", "6M07": "麥佩婷", "6M08": "鄧雪嫣", "6M09": "杜靜婷", "6M10": "黃嘉瀅", "6M11": "阮康晴", "6M12": "余欣桐", "6M13": "陳榮鎮", "6M14": "周柏希", "6M15": "陳星文", "6M16": "鄭其康", "6M17": "張楚謙", "6M18": "趙心信", "6M19": "洪俊霖", "6M20": "黎家瑋", "6M21": "林梓俊", "6M22": "盧梓豫", "6M23": "莫鈞麟", "6M24": "岳曜藍", "6M25": "譚鉫霖", "6M26": "譚穎軒", "6M27": "譚潤銘", "6M28": "王希元", "6M29": "黃凱熹", "6R01": "陳欣淇", "6R02": "陳曉璇", "6R03": "關心宜", "6R04": "吳珮鏇", "6R05": "彭楚雯", "6R06": "邵坤妮", "6R07": "譚森怡", "6R08": "黃海瑤", "6R09": "葉嘉欣", "6R10": "余凱琳", "6R11": "陳韋丞", "6R12": "邱承熙", "6R13": "梁峻豪", "6R14": "梁逸軒", "6R15": "李錦鋒", "6R16": "文晉炎", "6R17": "吳卓謙", "6R18": "施迪凱", "6R19": "譚君豪", "6R20": "鄧穎謙", "6R21": "黃楚雄", "6R22": "曾昊楠", "6R23": "張榮曦", "6Y01": "陳聖之", "6Y02": "陳芷晴", "6Y03": "陳紫瑩", "6Y04": "朱家儀", "6Y05": "李子柔", "6Y06": "梁樂晞", "6Y07": "馬子雯", "6Y08": "吳詠之", "6Y09": "談采盈", "6Y10": "王梓儒", "6Y11": "鍾文靜", "6Y12": "劉梓龍", "6Y13": "梁灝政", "6Y14": "梁子琪", "6Y15": "莫竣升", "6Y16": "吳卓倫", "6Y17": "吳橋", "6Y18": "屈家緯", "6Y19": "譚君傑", "6Y20": "尹智康", "6Y21": "黃成杰", "6Y22": "翁子豪", "6Y23": "曾志杰", "6Y24": "鍾晉"
+
+
+
+        };
+
+        const Card = ({ children, className = "" }) => (
+            <div className={`bg-white rounded-2xl shadow-lg border border-emerald-100/50 p-6 transition-all duration-300 hover:shadow-xl hover:border-emerald-200 ${className}`}>
+                {children}
+            </div>
+        );
+
+        const Button = ({ onClick, children, variant = "primary", className = "", disabled = false, title = "" }) => {
+            const variants = {
+                primary: "bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-200 hover:from-emerald-600 hover:to-green-700 active:scale-95",
+                secondary: "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:text-slate-800 active:bg-slate-100",
+                danger: "bg-red-50 text-red-500 border border-red-100 hover:bg-red-100 active:bg-red-200",
+                success: "bg-gradient-to-r from-lime-500 to-green-500 text-white shadow-lg shadow-lime-200 hover:from-lime-600 hover:to-green-600 active:scale-95",
+                outline: "border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 active:bg-emerald-100",
+                icon: "w-8 h-8 rounded-full flex items-center justify-center bg-white shadow-sm border border-slate-100 text-slate-500 hover:text-emerald-600 hover:border-emerald-200 transition-all hover:shadow-md"
+            };
+
+            return (
+                <button
+                    onClick={onClick}
+                    disabled={disabled}
+                    title={title}
+                    className={`font-bold tracking-wide transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none ${variants[variant]} ${variant !== 'icon' ? 'rounded-xl px-5 py-2.5' : ''} ${className}`}
+                >
+                    {children}
+                </button>
+            );
+        };
+
+        // --- Class Dashboard Component ---
+        const ClassDashboard = ({ 
+            classId, 
+            classData, 
+            onBack, 
+            onUpdateClassData, 
+            logo, 
+            logoSize, 
+            globalClassName,
+            onUpdateGlobalSettings
+        }) => {
+            const [activeTab, setActiveTab] = useState('scores');
+            
+            // Ephemeral states for this session/view
+            const [currentPick, setCurrentPick] = useState(null);
+            const [isPicking, setIsPicking] = useState(false);
+            const [groupCount, setGroupCount] = useState(4);
+            const [groups, setGroups] = useState([]);
+            const [timeLeft, setTimeLeft] = useState(0);
+            const [timerRunning, setTimerRunning] = useState(false);
+            const [timerMode, setTimerMode] = useState('countdown');
+            const timerRef = useRef(null);
+
+            const students = classData.students || [];
+            const gridCols = classData.gridCols || 7;
+            const gridRows = classData.gridRows || 5;
+            const customClassName = classData.customClassName || classId;
+
+            // Student Helpers
+            const updateStudents = (newStudents) => {
+                onUpdateClassData({ students: newStudents });
+            };
+
+            const updateScore = (id, delta) => {
+                updateStudents(students.map(s => s.id === id ? { ...s, score: s.score + delta } : s));
+            };
+
+            const toggleStatus = (id) => {
+                const statuses = ['present', 'late', 'absent'];
+                updateStudents(students.map(s => {
+                    if (s.id === id) {
+                        const currentIdx = statuses.indexOf(s.status);
+                        return { ...s, status: statuses[(currentIdx + 1) % 3] };
+                    }
+                    return s;
+                }));
+            };
+
+            const handleNameChange = (id, newName) => {
+                updateStudents(students.map(s => s.id === id ? { ...s, name: newName } : s));
+            };
+
+            const handleCodeChange = (id, newCode) => {
+                updateStudents(students.map(s => {
+                    if (s.id === id) {
+                        const upperCode = newCode.toUpperCase().trim();
+                        const lookupName = STUDENT_DB[upperCode];
+                        return { ...s, code: newCode, name: lookupName || s.name };
+                    }
+                    return s;
+                }));
+            };
+
+            // Grid Helpers
+            const handleGridChange = (newCols, newRows) => {
+                if (newCols < 1 || newRows < 1) return;
+                const newTotal = newCols * newRows;
+                let newStudents = [...students];
+                if (newTotal > students.length) {
+                    const toAdd = newTotal - students.length;
+                    const lastId = students.length > 0 ? students[students.length - 1].id : 0;
+                    const newItems = Array.from({ length: toAdd }, (_, i) => ({
+                        id: lastId + i + 1, name: "請輸入姓名", code: "", score: 0, status: 'present'
+                    }));
+                    newStudents = [...newStudents, ...newItems];
+                } else if (newTotal < students.length) {
+                    newStudents = newStudents.slice(0, newTotal);
+                }
+                onUpdateClassData({ students: newStudents, gridCols: newCols, gridRows: newRows });
+            };
+
+            // Settings Helpers
+            const handleBatchUpdate = (text) => {
+                const names = text.split('\n').filter(n => n.trim() !== '');
+                const newStudents = names.map((name, index) => {
+                    const existing = students[index];
+                    return {
+                        id: index + 1,
+                        name: name.trim(),
+                        code: existing ? existing.code : "",
+                        score: existing ? existing.score : 0,
+                        status: existing ? existing.status : 'present'
+                    };
+                });
+                updateStudents(newStudents);
+                alert(`名單已更新，共 ${newStudents.length} 人`);
+            };
+
+            // Picker Logic
+            const startPick = () => {
+                if (students.length === 0) return;
+                setIsPicking(true);
+                let counter = 0;
+                const interval = setInterval(() => {
+                    const randomIdx = Math.floor(Math.random() * students.length);
+                    setCurrentPick(students[randomIdx]);
+                    counter++;
+                    if (counter > 25) {
+                        clearInterval(interval);
+                        setIsPicking(false);
+                    }
+                }, 80);
+            };
+
+            // Group Logic
+            const generateGroups = () => {
+                if (students.length === 0) return;
+                const shuffled = [...students].sort(() => 0.5 - Math.random());
+                const newGroups = Array.from({ length: groupCount }, () => []);
+                shuffled.forEach((student, index) => {
+                    newGroups[index % groupCount].push(student);
+                });
+                setGroups(newGroups);
+            };
+
+            // Timer Logic
+            useEffect(() => {
+                if (timerRunning && timeLeft > 0 && timerMode === 'countdown') {
+                    timerRef.current = setInterval(() => setTimeLeft(t => t <= 1 ? (clearInterval(timerRef.current), setTimerRunning(false), 0) : t - 1), 1000);
+                } else if (timerRunning && timerMode === 'stopwatch') {
+                    timerRef.current = setInterval(() => setTimeLeft(t => t + 1), 1000);
+                }
+                return () => clearInterval(timerRef.current);
+            }, [timerRunning, timerMode]);
+
+            const formatTime = (seconds) => {
+                const m = Math.floor(seconds / 60);
+                const s = seconds % 60;
+                return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            };
+
+            // Render Sub-Components
+            const renderScores = () => {
+                const sortedStudents = [...students].sort((a, b) => a.id - b.id);
+                const activeCount = students.filter(s => s.code && s.code.trim() !== '').length;
+                return (
+                    <div className="flex flex-col min-h-0">
+                        {/* Control Header - Sticky Top */}
+                        <div className="sticky top-0 z-30 bg-slate-50 pt-2 pb-4">
+                            <div className="flex flex-col xl:flex-row justify-between items-end xl:items-center border-b border-slate-200 pb-2 gap-4">
+                                <div>
+                                    <h3 className="font-bold text-2xl text-slate-800 flex items-center gap-2">
+                                        <Icons.Award className="text-yellow-500" /> 學生表現
+                                    </h3>
+                                    <p className="text-slate-500 text-sm mt-1">輸入班號 (如 1A01) 自動顯示姓名</p>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-4">
+                                    <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-xl font-bold shadow-sm border border-emerald-100">
+                                        <Icons.Columns size={16} /> <span className="text-sm mr-1">直行: {gridCols}</span>
+                                        <Button variant="icon" onClick={() => handleGridChange(gridCols - 1, gridRows)} disabled={gridCols <= 1} className="w-6 h-6 !p-0 bg-white"><Icons.Minus size={12} /></Button>
+                                        <Button variant="icon" onClick={() => handleGridChange(gridCols + 1, gridRows)} disabled={gridCols >= 12} className="w-6 h-6 !p-0 bg-white"><Icons.Plus size={12} /></Button>
+                                    </div>
+                                    <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-xl font-bold shadow-sm border border-emerald-100">
+                                        <Icons.Rows size={16} /> <span className="text-sm mr-1">橫行: {gridRows}</span>
+                                        <Button variant="icon" onClick={() => handleGridChange(gridCols, gridRows - 1)} disabled={gridRows <= 1} className="w-6 h-6 !p-0 bg-white"><Icons.Minus size={12} /></Button>
+                                        <Button variant="icon" onClick={() => handleGridChange(gridCols, gridRows + 1)} disabled={gridRows >= 20} className="w-6 h-6 !p-0 bg-white"><Icons.Plus size={12} /></Button>
+                                    </div>
+                                    <div className="flex items-center gap-2 bg-slate-100 text-slate-600 px-4 py-1.5 rounded-xl font-bold border border-slate-200">
+                                        <span className="text-sm">人數: {activeCount}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Classroom Body - expands naturally */}
+                        <div className="bg-stone-100 rounded-2xl border-4 border-stone-200 flex flex-col relative shadow-inner mt-4">
+                            <div className="flex relative items-stretch">
+                                {/* Left Wall */}
+                                <div className="w-12 bg-stone-200 border-r border-stone-300 flex flex-col justify-end items-center pb-16 shrink-0 shadow-[inset_-10px_0_15px_-3px_rgba(0,0,0,0.1)]">
+                                    <div className="w-10 h-40 bg-amber-700 rounded-r-lg border-y-4 border-r-4 border-amber-800 shadow-lg flex items-center justify-center relative group overflow-hidden"><div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent"></div><span className="text-amber-100 font-bold text-xl [writing-mode:vertical-rl] tracking-widest drop-shadow-md">門口</span><div className="absolute right-1 top-1/2 -translate-y-1/2 w-1.5 h-3 bg-amber-200 rounded-full shadow-sm"></div></div>
+                                </div>
+                                
+                                {/* Center Grid */}
+                                <div className="flex-1 p-6 flex flex-col items-center">
+                                    <div className="grid gap-3 w-full max-w-[1600px]" style={{ gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))` }}>
+                                        {sortedStudents.map(s => (
+                                            <div key={s.id} className={`relative p-2 rounded-xl border-2 transition-all duration-300 ${s.status === 'present' ? 'border-white bg-white shadow-md' : s.status === 'late' ? 'border-amber-200 bg-amber-50' : 'border-rose-200 bg-rose-50 opacity-80'}`}>
+                                                <div className="flex flex-col justify-between h-full space-y-1">
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <span onClick={() => toggleStatus(s.id)} className="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-100 px-1.5 py-0.5 rounded cursor-pointer">{s.status !== 'present' ? (s.status === 'late' ? <span className="text-amber-500">遲到</span> : <span className="text-rose-500">缺席</span>) : `ID ${s.id}`}</span>
+                                                        <input className="w-full ml-2 text-lg font-mono font-bold text-right text-emerald-600 border-b border-slate-200 focus:border-emerald-500 outline-none bg-transparent uppercase min-w-[3rem]" placeholder="____" value={s.code || ''} onChange={(e) => handleCodeChange(s.id, e.target.value)} />
+                                                    </div>
+                                                    <div className="flex-1 flex items-center justify-center py-1">
+                                                        <input type="text" value={s.name} onChange={(e) => handleNameChange(s.id, e.target.value)} className="w-full font-bold text-slate-800 text-base bg-transparent border-none text-center p-0 outline-none truncate" placeholder="姓名" />
+                                                    </div>
+                                                    <div className="flex items-center justify-between bg-slate-50/80 rounded-lg p-1">
+                                                        <button onClick={() => updateScore(s.id, -1)} className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-white text-rose-500"><Icons.Minus size={12} /></button>
+                                                        <span className={`font-bold text-base ${s.score > 0 ? 'text-emerald-600' : s.score < 0 ? 'text-rose-600' : 'text-slate-300'}`}>{s.score}</span>
+                                                        <button onClick={() => updateScore(s.id, 1)} className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-white text-emerald-500"><Icons.Plus size={12} /></button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Right Wall */}
+                                <div className="w-12 bg-stone-200 border-l border-stone-300 flex flex-col justify-center items-center py-10 shrink-0 shadow-[inset_10px_0_15px_-3px_rgba(0,0,0,0.1)]">
+                                    <div className="w-full h-3/4 max-h-[600px] bg-sky-100/50 border-y-8 border-l-4 border-stone-300 flex items-center justify-center relative overflow-hidden"><div className="absolute inset-x-0 top-1/4 h-1 bg-stone-300/50"></div><div className="absolute inset-x-0 top-2/4 h-1 bg-stone-300/50"></div><div className="absolute inset-x-0 top-3/4 h-1 bg-stone-300/50"></div><span className="text-sky-700/50 font-bold text-lg [writing-mode:vertical-rl] tracking-[1em]">窗</span></div>
+                                </div>
+                            </div>
+                            
+                            {/* Bottom Wall */}
+                            <div className="h-28 bg-stone-200 border-t border-stone-300 flex items-center justify-center shrink-0 shadow-[inset_0_10px_15px_-3px_rgba(0,0,0,0.1)] z-10"><div className="relative"><div className="w-64 h-16 bg-amber-800 rounded-lg shadow-2xl border-b-8 border-r-8 border-amber-950 flex items-center justify-center text-amber-100 text-2xl font-bold tracking-widest transform translate-y-2">教師桌</div><div className="absolute -top-2 left-4 w-8 h-4 bg-white/10 rounded"></div><div className="absolute -top-3 right-8 w-6 h-6 bg-slate-100 rounded-full shadow-md border border-slate-300 flex items-center justify-center text-[8px]">☕</div></div></div>
+                        </div>
+                    </div>
+                );
+            };
+
+            return (
+                <div className="flex flex-col min-h-screen bg-slate-50">
+                    {/* Class Header - Sticky Top */}
+                    <div className="sticky top-0 z-40 bg-white shadow-sm">
+                        <div className="border-b px-4 py-3 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500">
+                                    <Icons.ChevronLeft size={24} />
+                                </button>
+                                <div className="bg-emerald-100 p-2 rounded-lg text-emerald-600">
+                                    <Icons.GraduationCap size={24} />
+                                </div>
+                                <div>
+                                    <h1 className="text-xl font-bold text-slate-800">{customClassName || classId}</h1>
+                                    <div className="text-xs text-slate-500">{globalClassName}</div>
+                                </div>
+                            </div>
+                            <div className="hidden md:flex items-center gap-2 text-sm text-slate-400 bg-slate-100 px-3 py-1 rounded-full">
+                                <Icons.Clock size={14} />
+                                <span>{new Date().toLocaleDateString()}</span>
+                            </div>
+                        </div>
+
+                        {/* Nav Tabs */}
+                        <div className="px-4 py-2 bg-white overflow-x-auto border-b">
+                            <div className="flex gap-2 min-w-max">
+                                {[
+                                    { id: 'scores', label: '學生表現', icon: Icons.Award },
+                                    { id: 'picker', label: '幸運抽籤', icon: Icons.Leaf },
+                                    { id: 'groups', label: '分組助手', icon: Icons.Users },
+                                    { id: 'timer', label: '計時工具', icon: Icons.Clock },
+                                    { id: 'settings', label: '設定名單', icon: Icons.Settings },
+                                ].map(tab => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-all ${
+                                            activeTab === tab.id 
+                                            ? 'bg-emerald-500 text-white shadow-md' 
+                                            : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-100'
+                                        }`}
+                                    >
+                                        <tab.icon size={16} />
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Content Area - Natural Scrolling */}
+                    <div className="p-4 md:p-6 pb-20">
+                        {activeTab === 'scores' && renderScores()}
+                        {activeTab === 'picker' && (
+                            <div className="flex flex-col items-center justify-center h-[60vh] animate-fade-in">
+                                <div className="relative mb-10">
+                                    <div className={`absolute inset-0 bg-emerald-200 rounded-full blur-3xl opacity-30 transition-all duration-500 ${isPicking ? 'scale-150 opacity-50' : 'scale-100'}`}></div>
+                                    <div className={`relative text-6xl md:text-8xl font-black transition-all transform duration-300 tracking-tight text-center ${isPicking ? 'scale-110 text-emerald-500' : 'scale-100 text-slate-800'}`}>
+                                        {currentPick ? currentPick.name : "準備開始"}
+                                    </div>
+                                </div>
+                                <div className="flex flex-col items-center gap-6 z-10">
+                                    <Button onClick={startPick} disabled={isPicking} className="px-12 py-5 text-2xl shadow-emerald-200/50 rounded-full">
+                                        <Icons.Shuffle size={28} className={isPicking ? "animate-spin" : ""} /> {isPicking ? "抽選中..." : "幸運抽籤"}
+                                    </Button>
+                                    {currentPick && !isPicking && (
+                                        <div className="flex gap-4 animate-bounce-in bg-white p-2 rounded-2xl shadow-lg border border-emerald-100">
+                                            <Button variant="success" onClick={() => updateScore(currentPick.id, 1)}><Icons.Award size={20} /> 加分</Button>
+                                            <Button variant="danger" onClick={() => updateScore(currentPick.id, -1)}>扣分</Button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                        {activeTab === 'groups' && (
+                            <div className="space-y-8 animate-fade-in">
+                                <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-emerald-100 shadow-sm">
+                                    <div className="flex items-center gap-4">
+                                        <span className="bg-emerald-100 text-emerald-700 p-2 rounded-lg"><Icons.Users size={24}/></span>
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-slate-700 text-lg">分組設定</span>
+                                            <span className="text-slate-500 text-sm">將 {students.length} 位學生隨機分配</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <label className="font-medium text-slate-600">組數:</label>
+                                        <input type="number" min="2" max="12" value={groupCount} onChange={(e) => setGroupCount(Number(e.target.value))} className="w-20 p-2 border-2 border-emerald-200 rounded-xl text-center text-xl font-bold text-emerald-700 outline-none focus:border-emerald-500"/>
+                                        <Button onClick={generateGroups}><Icons.RefreshCw size={20} /> 立即分組</Button>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    {groups.map((group, idx) => (
+                                        <div key={idx} className="bg-white rounded-2xl p-5 shadow-md border border-slate-100 relative overflow-hidden">
+                                            <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-50 rounded-bl-full -mr-10 -mt-10"></div>
+                                            <div className="relative z-10">
+                                                <div className="font-bold text-xl text-emerald-800 mb-4 flex justify-between items-center">
+                                                    <span>第 {idx + 1} 組</span>
+                                                    <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">{group.length} 人</span>
+                                                </div>
+                                                <ul className="space-y-2">
+                                                    {group.map(s => (
+                                                        <li key={s.id} className="text-slate-600 font-medium flex items-center gap-3 bg-slate-50 p-2 rounded-lg">
+                                                            <span className="w-6 h-6 rounded-full bg-white border border-emerald-200 text-xs flex items-center justify-center text-emerald-600 font-bold">{s.id}</span>
+                                                            {s.name}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {activeTab === 'timer' && (
+                            <div className="flex flex-col items-center justify-center h-[60vh] space-y-12 animate-fade-in">
+                                <div className="text-[8rem] sm:text-[10rem] font-mono font-bold tracking-tighter tabular-nums text-slate-800">
+                                    {formatTime(timeLeft)}
+                                </div>
+                                <div className="flex gap-4 flex-wrap justify-center max-w-2xl">
+                                    {[1, 3, 5, 10, 20].map(min => (
+                                        <button key={min} onClick={() => startTimer(min)} className="px-6 py-2 rounded-full border-2 border-slate-200 text-slate-600 font-bold hover:border-emerald-400 hover:text-emerald-600 transition-all">
+                                            {min} 分
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="flex gap-6">
+                                    {!timerRunning ? 
+                                        <Button onClick={() => setTimerRunning(true)} variant="primary" className="w-40 py-4 text-xl rounded-full"><Icons.Play /> 開始</Button> :
+                                        <Button onClick={() => setTimerRunning(false)} variant="secondary" className="w-40 py-4 text-xl rounded-full"><Icons.Pause /> 暫停</Button>
+                                    }
+                                    <Button onClick={() => { setTimerRunning(false); setTimeLeft(0); }} variant="danger" className="w-20 py-4 rounded-full"><Icons.RotateCcw /></Button>
+                                </div>
+                            </div>
+                        )}
+                        {activeTab === 'settings' && (
+                            <div className="max-w-3xl mx-auto space-y-8 animate-fade-in">
+                                <Card className="border-emerald-200/60 bg-gradient-to-br from-white to-emerald-50/30">
+                                    <h3 className="text-xl font-bold mb-6 flex items-center gap-3 text-emerald-800">
+                                        <div className="p-2 bg-emerald-100 rounded-lg"><Icons.Settings size={24} /></div>
+                                        {classId} 班級設定
+                                    </h3>
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="block text-sm font-bold text-slate-600 mb-2">班級顯示名稱</label>
+                                            <input type="text" value={customClassName || ""} onChange={(e) => onUpdateClassData({ customClassName: e.target.value })} className="w-full p-3 border-2 border-slate-200 rounded-xl focus:border-emerald-500 outline-none" placeholder={classId} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-slate-600 mb-2">學生名單 (每行一個)</label>
+                                            <textarea 
+                                                defaultValue={students.map(s => s.name).join('\n')}
+                                                onBlur={(e) => handleBatchUpdate(e.target.value)}
+                                                className="w-full p-4 border-2 border-slate-200 rounded-xl h-64 font-mono text-base focus:border-emerald-500 outline-none resize-none"
+                                                placeholder="例如：&#10;張小明&#10;李大文"
+                                            />
+                                            <div className="text-xs text-slate-400 mt-2 text-right">離開輸入框自動儲存</div>
+                                        </div>
+                                    </div>
+                                </Card>
+                                <Card>
+                                    <h3 className="text-lg font-bold mb-4">全域設定</h3>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-600 mb-2">Logo 圖片</label>
+                                        <div className="flex items-center gap-4">
+                                            {logo && <img src={logo} className="h-16 w-16 object-contain border rounded-lg" />}
+                                            <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg font-bold text-slate-600 flex items-center gap-2">
+                                                <Icons.Upload size={16}/> 上傳
+                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                                    const file = e.target.files[0];
+                                                    if(file){
+                                                        const reader = new FileReader();
+                                                        reader.onloadend = () => onUpdateGlobalSettings({ logo: reader.result });
+                                                        reader.readAsDataURL(file);
+                                                    }
+                                                }} />
+                                            </label>
+                                            <input type="range" min="20" max="100" value={logoSize} onChange={(e) => onUpdateGlobalSettings({ logoSize: Number(e.target.value) })} className="w-32 accent-emerald-500" />
+                                        </div>
+                                    </div>
+                                    <div className="mt-4">
+                                        <label className="block text-sm font-bold text-slate-600 mb-2">主標題</label>
+                                        <input type="text" value={globalClassName} onChange={(e) => onUpdateGlobalSettings({ className: e.target.value })} className="w-full p-2 border rounded-lg" />
+                                    </div>
+                                </Card>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const CLASS_IDS = ['1Y', '3R', '3Y', 'S4G4'];
+
+        function App() {
+            const [view, setView] = useState('home'); // 'home' | 'class'
+            const [currentClassId, setCurrentClassId] = useState(null);
+            
+            // Global Data
+            const [globalSettings, setGlobalSettings] = useState({
+                className: "馮sir教室",
+                logo: null,
+                logoSize: 40
+            });
+
+            // Per-Class Persistent Data
+            const [allClassData, setAllClassData] = useState({});
+
+            // Initialization
+            useEffect(() => {
+                const savedData = localStorage.getItem('classroom_tool_v3_final_data');
+                if (savedData) {
+                    const parsed = JSON.parse(savedData);
+                    setAllClassData(parsed.allClassData || {});
+                    setGlobalSettings(parsed.globalSettings || { className: "馮sir教室", logo: null, logoSize: 40 });
+                } else {
+                    const initialData = {};
+                    CLASS_IDS.forEach(id => {
+                        initialData[id] = {
+                            students: Array.from({ length: 35 }, (_, i) => ({ id: i + 1, name: `學生 ${i + 1}`, code: "", score: 0, status: 'present' })),
+                            gridCols: 7,
+                            gridRows: 5,
+                            customClassName: id
+                        };
+                    });
+                    setAllClassData(initialData);
+                }
+            }, []);
+
+            // Save on change
+            useEffect(() => {
+                localStorage.setItem('classroom_tool_v3_final_data', JSON.stringify({ allClassData, globalSettings }));
+            }, [allClassData, globalSettings]);
+
+            const updateClassData = (classId, updates) => {
+                setAllClassData(prev => ({
+                    ...prev,
+                    [classId]: { ...prev[classId], ...updates }
+                }));
+            };
+
+            const enterClass = (id) => {
+                if (!allClassData[id]) {
+                    // Initialize if missing (e.g. new version)
+                    updateClassData(id, {
+                        students: Array.from({ length: 35 }, (_, i) => ({ id: i + 1, name: `學生 ${i + 1}`, code: "", score: 0, status: 'present' })),
+                        gridCols: 7,
+                        gridRows: 5,
+                        customClassName: id
+                    });
+                }
+                setCurrentClassId(id);
+                setView('class');
+            };
+
+            // Render Home
+            if (view === 'home') {
+                return (
+                    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+                        <header className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg p-4">
+                            <div className="container mx-auto flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    {globalSettings.logo ? (
+                                        <img src={globalSettings.logo} style={{ height: globalSettings.logoSize }} className="object-contain bg-white/10 rounded-lg p-1" />
+                                    ) : (
+                                        <div className="bg-white/20 p-2 rounded-lg"><Icons.GraduationCap size={28} /></div>
+                                    )}
+                                    <h1 className="text-2xl font-bold tracking-tight">{globalSettings.className}</h1>
+                                </div>
+                                <div className="text-sm bg-white/20 px-3 py-1 rounded-full">{new Date().toLocaleDateString()}</div>
+                            </div>
+                        </header>
+                        <main className="flex-1 container mx-auto p-4 md:p-8 flex items-center justify-center">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+                                {CLASS_IDS.map(id => (
+                                    <button 
+                                        key={id} 
+                                        onClick={() => enterClass(id)}
+                                        className="bg-white hover:bg-emerald-50 border-2 border-emerald-100 hover:border-emerald-400 rounded-3xl p-8 flex flex-col items-center justify-center gap-4 shadow-lg hover:shadow-xl transition-all group h-64"
+                                    >
+                                        <div className="bg-emerald-100 text-emerald-600 p-6 rounded-full group-hover:scale-110 transition-transform">
+                                            <Icons.Users size={48} />
+                                        </div>
+                                        <div className="text-4xl font-black text-slate-700 group-hover:text-emerald-700">
+                                            {allClassData[id]?.customClassName || id}
+                                        </div>
+                                        <div className="text-slate-400 font-medium">
+                                            點擊進入班級儀表板
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </main>
+                        <footer className="text-center p-6 text-slate-400 text-xs">
+                            © {new Date().getFullYear()} 馮sir教室管理工具 (v3.0 Multi-Class)
+                        </footer>
+                    </div>
+                );
+            }
+
+            // Render Class Dashboard
+            return (
+                <ClassDashboard 
+                    classId={currentClassId}
+                    classData={allClassData[currentClassId] || {}}
+                    onBack={() => setView('home')}
+                    onUpdateClassData={(updates) => updateClassData(currentClassId, updates)}
+                    logo={globalSettings.logo}
+                    logoSize={globalSettings.logoSize}
+                    globalClassName={globalSettings.className}
+                    onUpdateGlobalSettings={(settings) => setGlobalSettings(prev => ({ ...prev, ...settings }))}
+                />
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
